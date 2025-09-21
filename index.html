@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MikeCoder96 — Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            background: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0 1em;
+            line-height: 1.6;
+        }
+        h1, h2 {
+            color: #fff;
+            margin-top: 0;
+        }
+        a {
+            color: #1e90ff;
+            text-decoration: none;
+        }
+        a:hover { text-decoration: underline; }
+        .container {
+            max-width: 700px;
+            margin: 2em auto;
+            padding: 2em;
+            background: rgba(30,30,30,0.9);
+            border-radius: 8px;
+            box-shadow: 0 0 16px #222;
+        }
+        nav {
+            margin-bottom: 1.2em;
+            display: flex;
+            gap: 1em;
+            flex-wrap: wrap;
+        }
+        .post-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .post-item {
+            padding: 1em;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.02);
+            margin-bottom: 0.9em;
+        }
+        .post-item h3 {
+            margin: 0 0 0.2em 0;
+            font-size: 1.05em;
+        }
+        .post-meta {
+            font-size: 0.9em;
+            color: #cfcfcf;
+            margin-bottom: 0.6em;
+        }
+        .about {
+            margin-top: 1.2em;
+            padding-top: 1.2em;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        code, pre {
+            background: #222;
+            color: #fff;
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        footer {
+            margin-top: 1.6em;
+            font-size: 0.9em;
+            color: #bfbfbf;
+        }
+        .cta {
+            display: inline-block;
+            margin-top: 0.6em;
+            padding: 0.35em 0.7em;
+            border-radius: 6px;
+            background: rgba(30,144,255,0.08);
+            color: #1e90ff;
+            border: 1px solid rgba(30,144,255,0.12);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>MikeCoder96 — Blog</h1>
+            <nav>
+                <a href="https://github.com/MikeCoder96" target="_blank" rel="noopener">GitHub</a>
+                <a href="/about.html">About</a>
+                <a href="/projects.html">Projects</a>
+                <a href="/rss.xml">RSS</a>
+                <a href="/contact.html">Contact</a>
+            </nav>
+        </header>
+
+        <section>
+            <p>
+                Welcome to the personal blog of <strong>MikeCoder96</strong>.  
+                Here I share technical notes, quick guides, and experiments with hardware and software.  
+                Below are the latest posts — click a title to read the full article.
+            </p>
+
+            <h2>Latest Posts</h2>
+            <ul class="post-list">
+            </ul>
+
+            <h2>Popular Tags</h2>
+            <p>
+                <a href="/tag/networking.html">networking</a> ·
+                <a href="/tag/hardware.html">hardware</a> ·
+                <a href="/tag/opnsense.html">opnsense</a> ·
+                <a href="/tag/devops.html">devops</a>
+            </p>
+        </section>
+
+        <aside class="about">
+            <h2>About Me</h2>
+            <p>
+                Hi — I’m <strong>Mike</strong> (aka <code>MikeCoder96</code> on GitHub).  
+                I code, tinker with networks and hardware, and occasionally publish practical guides and notes.
+            </p>
+            <p>
+                Follow my work on <a href="https://github.com/MikeCoder96" target="_blank" rel="noopener">GitHub</a>  
+                — feel free to open an issue or PR if you spot something to improve.
+            </p>
+
+            <p>
+                <a class="cta" href="https://github.com/MikeCoder96" target="_blank" rel="noopener">Visit my GitHub profile</a>
+            </p>
+        </aside>
+
+        <footer>
+            <p>
+                © <span id="year">2025</span> MikeCoder96 · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a>
+            </p>
+            <p>
+                Do you also want me to generate a simple <code>about.html</code> and <code>rss.xml</code> ready for GitHub Pages?
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Auto-update the year in the footer
+        (function(){
+            var y = new Date().getFullYear();
+            document.getElementById('year').textContent = y;
+        })();
+    </script>
+</body>
+</html>
