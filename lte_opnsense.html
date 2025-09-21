@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Quectel EC25-EUX Adventure on OPNsense</title>
+    <title>My adventure with LTE as failover on OPNsense</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
@@ -37,31 +37,132 @@
 </head>
 <body>
     <div class="container">
-        <h1>My Quectel EC25-EUX Adventure on OPNsense</h1>
+        <h1>My adventure with LTE as failover on OPNsense</h1>
         <p>
-            Hey there! I just got my <strong>Quectel EC25-EUX</strong> LTE modem working with OPNsense, and I wanted to share how it went. If you’re thinking about doing the same, here’s what I did (and what I learned along the way)!
+            This was the most painful hardware setup I’ve done in a while, but I finally managed to get my Quectel EC25-EUX LTE modem working on my Topton Firewall with OPNsense.
+            My journey started on 28 August 2025 and ended on 11 September 2025, because Aliexpress is fast but not fast enough :D.
+            <br>
+            <b>Summary:</b> To make it work, you need the module and also antennas. The signal must be >10 dBm to have a stable connection. pfSense seems to work better with LTE modems.
         </p>
-        <h2>Getting Things Plugged In</h2>
-        <ul>
-            <li>Popped the EC25-EUX into the mini PCIe slot (it fits snug!).</li>
-            <li>Hooked up the antennas and slid in the SIM card.</li>
-        </ul>
-        <h2>Setting Up OPNsense</h2>
-        <ol>
-            <li>Checked if the modem showed up using <code>dmesg</code> and <code>usbconfig</code> (always a good sign when it does!).</li>
-            <li>Went to <strong>Interfaces &gt; Point-to-Point</strong> and set up a PPP interface.</li>
-            <li>Typed in my carrier’s APN info (double-check this!).</li>
-            <li>Turned on the interface and crossed my fingers—success!</li>
-        </ol>
-        <h2>Handy Tips &amp; Gotchas</h2>
-        <ul>
-            <li>If it’s not showing up, check your cables and BIOS settings (I had to wiggle mine a bit).</li>
-            <li>Try <code>cu -l /dev/cuaU0</code> to send AT commands and see if the modem responds.</li>
-            <li>If PPP is grumpy, peek at <code>/var/log/ppp.log</code> for clues.</li>
-        </ul>
+        <h2>Before You Start</h2>
         <p>
-            So far, the EC25-EUX has been awesome for LTE failover. If you get stuck or just want to chat about it, <a href="mailto:mikecoder96@gmail.com">drop me a line</a>!
+            If you are doing the same thing for your homelab or similar, remember that you need the specific module based on your region (EUX for Europe, EAU for Australia, etc.).
+            OPNsense is having a hard time with the PPP protocol. As of now (21 September 2025), we can start a connection with LTE but without achieving good bandwidth.
         </p>
-    </div>
+        <h2>Material Used</h2>
+
+        <li>Topton N6210 <a href="https://it.aliexpress.com/item/1005007265092176.html?spm=a2g0o.order_list.order_list_main.31.5311369621Bdzk&gatewayAdapt=glo2ita">Link</a></li>
+        <li>Quectel EC25-EUX LTE Modem <a href="https://it.aliexpress.com/item/1005001680456265.html?spm=a2g0o.order_list.order_list_main.21.5311369621Bdzk&gatewayAdapt=glo2ita">Link</a></li>
+        <li>IPX to SMA Connectors <a href="https://it.aliexpress.com/item/4000848776660.html?spm=a2g0o.order_list.order_list_main.11.5311369621Bdzk&gatewayAdapt=glo2ita">Link</a></li>
+        <li>Antennas <a href="https://it.aliexpress.com/item/1005003194475845.html?spm=a2g0o.order_list.order_list_main.5.140c1802wIZZ8z&gatewayAdapt=glo2ita">Link</a></li>
+        
+        <h2>Let's Start</h2>
+        <p>
+            <figure style="margin:0;">
+            <figcaption style="margin-bottom:0.5em;">
+                Let's start with the hardware installation:
+            </figcaption>
+            <img src="img/IMG_4643.jpg" 
+                alt="Topton N6210 with Quectel EC25-EUX" 
+                style="width:100%;max-width:300px;margin:0;">
+            </figure>
+            <p>
+            <figure style="margin:0;">
+            <figcaption style="margin-bottom:0.5em;">
+            Then, you need to open the Topton case. This is very easy: just remove the 4 screws on the bottom and then use a plastic card to open the case.
+            Install the modem in the M.2 slot:
+            </figcaption>
+            <img src="img/IMG_4646.jpg" 
+                alt="Topton N6210 with Quectel EC25-EUX" 
+                style="width:100%;max-width:300px;margin:0;">
+            </figure>
+            Unfortunately, there is no slot for the second screw, so the modem will be a bit loose, but it will work anyway.
+            <p>
+            For some reason, I thought the modem would work without antennas, but no — it needs them. I’ll talk about this later.
+            So, we can turn on the device and start the configuration.
+            Booted the PC, OPNsense was OK, so let's go into the /dev/ folder to see if the modem is recognized. Let's execute:
+            <pre><code>ls /dev/cua*</code></pre>
+            but no cuaU0.* found... Strange, so I decided to check the dmesg:
+            <pre><code>dmesg | grep -i "wwan\|qcserial\|cdc\|usb"</code></pre>
+            No logs about the modem... What is going on? I decided to check the BIOS settings to see if the M.2 slot was enabled, and it was.
+            Something sketchy was going on, so I decided to check the modem again and I noticed something.
+            <br>
+            <figure style="margin:0;">
+            <figcaption style="margin-bottom:0.5em;">
+            The modem was having a hard time because it was a little bit bent due to the metal piece near the pins:
+            </figcaption>
+            <img src="img/IMG_4645.jpg" 
+                alt="Quectel Module" 
+                style="width:100%;max-width:390px;margin:0;">
+            </figure>
+            <figure style="margin:0;">
+            <img src="img/IMG_4648.jpg" 
+                alt="Bent Module" 
+                style="width:100%;max-width:300px;margin:0;">
+            </figure>
+           "It took me 2 hours to figure this out, and I almost returned the modem." :D
+            <br>
+
+            So, finally I had something in dmesg and, listing devices in /dev/, I got:
+            <pre><code>/dev/cuaU0.0
+ /dev/cuaU0.1
+ /dev/cuaU0.2    
+ /dev/cuaU0.3
+ /dev/cuaU0.4</code></pre>
+ Now, according to official documentation, usually the one that we need is <b>cuaU0.2</b> or <b>cuaU0.3</b>, so let's try with <b>cuaU0.2</b>:
+            <pre><code>cu -l /dev/cuaU0.2</code></pre>
+To be totally honest, CU was the worst thing I could use. It was not working properly — and by properly I mean that sometimes I couldn’t see what I typed, or I was not able to exit using ~. As far as I know, the problem was SSH.
+Anyway, the first command returned OK: 
+<pre><code>AT
+ OK
+</code></pre> 
+then, we have to check if the SIM was recognized:
+<pre><code>AT+CPIN?
+ ERROR</code></pre> 
+ ERROR... ok, so the SIM was not recognized. I tried with another SIM but no luck... You should know that there is a SIM slot on the Topton device I have and, according to what people say online, it communicates with the modem directly through the M.2 slot.
+<p>
+So, I decided to open the case again and check if the SIM was properly inserted or there was a broken trace on motherboard but, nothing strange found. 
+Having lost all hope at this point, I decided to look online and, luckily, I found a <a href="https://forums.servethehome.com/index.php?threads/topton-jasper-lake-quad-i225v-mini-pc-report.36699/">forum post</a> talking about the same device so, I explained the problem there. Someone replied with the solution and it was very easy but not intuitive... Insert the SIM with the cut facing you (you are kidding me, Topton? :D).
+<br>
+>It worked, we now have the SIM recognized:
+<pre><code>AT+CPIN?
+ +CPIN: READY
+</code></pre>
+Now, we can check the signal quality:
+<pre><code>AT+CSQ
+ +CSQ: 99,99    
+</code></pre>
+Oh no, the first 99 means that there is no signal. Why? I mean, the module is without antennas but at least I expected like 2–3... 
+<br>My mind was going crazy. I was thinking that the module was dead or something like that, so I decided to ask on that forum if someone had the same problem and, luckily, someone answered that without antennas the signal is 99 because the device is a Faraday cage internally.
+Let's buy cables + antennas. 
+<figure style="margin:0;">
+    <img src="img/days.jpg" 
+        alt="suffering" 
+        style="width:100%;max-width:300px;margin:0;">
+</figure>
+Antennas + cables arrived and, after connecting the antennas to the modem, I now have the following signal:
+<pre><code>AT+CSQ
+ +CSQ: 21,99
+</code></pre>
+Good, now we have signal. 21 is a good value; usually >10 is OK.
+Let's check the network registration:
+<pre><code>AT+CREG?
+ +CREG: 0,1
+</code></pre>
+1 means that we are registered on the network. 
+<br>Now we can check the operator:
+<pre><code>AT+COPS?
+ +COPS: 0,0,"TIM",2
+</code></pre>
+TIM is the operator of my SIM so everything is working fine.
+<p>
+Is time to setup the connection on OPNsense. The procedure is explained in the official documentation <a href="https://docs.opnsense.org/manual/how-tos/cellular.html">here</a>, so I will not repeat it, to spare you some time.
+<br>The problem is that, after the configuration, I was not able to establish a connection. This is because FreeBSD (the base of OPNsense) has problems with PPP. The bug ID is <a href="https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=281218">#281218</a>.
+Also, on opnsense-core GitHub there is an issue about this problem <a href="https://github.com/opnsense/src/issues/2142">#2142</a>, and someone was able to get a working connection by using this init string in the PPP configuration:
+<pre><code>&F&C1&D2E0S0=0${temp}
+</code></pre>
+With that string I was able to get a connection, but the bandwidth was very low, around 10 Mbps down and 6 Mbps up but is enough for me for the moment.
+<br>
+If you need higher speeds, consider using pfSense or a dedicated LTE router.
 </body>
 </html>
