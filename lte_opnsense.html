@@ -40,16 +40,16 @@
         <h1>My adventure with LTE as failover on OPNsense</h1>
         <p>
             This was the most painful hardware setup I’ve done in a while, but I finally managed to get my Quectel EC25-EUX LTE modem working on my Topton Firewall with OPNsense.
-            My journey started on 28 August 2025 and ended on 11 September 2025, because Aliexpress is fast but not fast enough :D.
+            My journey started on 28 August 2025 and ended on 11 September 2025, because AliExpress is fast but not fast enough :D.
             <br>
             <b>Summary:</b> To make it work, you need the module and also antennas. The signal must be >10 dBm to have a stable connection. pfSense seems to work better with LTE modems.
         </p>
         <h2>Before You Start</h2>
         <p>
-            If you are doing the same thing for your homelab or similar, remember that you need the specific module based on your region (EUX for Europe, EAU for Australia, etc.).
+            If you are doing the same thing for your homelab or something similar, remember that you need the specific module based on your region (EUX for Europe, EAU for Australia, etc.).
             OPNsense is having a hard time with the PPP protocol. As of now (21 September 2025), we can start a connection with LTE but without achieving good bandwidth.
         </p>
-        <h2>Material Used</h2>
+        <h2>Materials Used</h2>
 
         <li>Topton N6210 <a href="https://it.aliexpress.com/item/1005007265092176.html?spm=a2g0o.order_list.order_list_main.31.5311369621Bdzk&gatewayAdapt=glo2ita">Link</a></li>
         <li>Quectel EC25-EUX LTE Modem <a href="https://it.aliexpress.com/item/1005001680456265.html?spm=a2g0o.order_list.order_list_main.21.5311369621Bdzk&gatewayAdapt=glo2ita">Link</a></li>
@@ -89,7 +89,7 @@
             <br>
             <figure style="margin:0;">
             <figcaption style="margin-bottom:0.5em;">
-            The modem was having a hard time because it was a little bit bent due to the metal piece near the pins:
+            The modem was having a hard time because it was a little bent due to the metal piece near the pins:
             </figcaption>
             <img src="img/IMG_4645.jpg" 
                 alt="Quectel Module" 
@@ -109,7 +109,7 @@
  /dev/cuaU0.2    
  /dev/cuaU0.3
  /dev/cuaU0.4</code></pre>
- Now, according to official documentation, usually the one that we need is <b>cuaU0.2</b> or <b>cuaU0.3</b>, so let's try with <b>cuaU0.2</b>:
+ Now, according to the official documentation, usually the one that we need is <b>cuaU0.2</b> or <b>cuaU0.3</b>, so let's try with <b>cuaU0.2</b>:
             <pre><code>cu -l /dev/cuaU0.2</code></pre>
 To be totally honest, CU was the worst thing I could use. It was not working properly — and by properly I mean that sometimes I couldn’t see what I typed, or I was not able to exit using ~. As far as I know, the problem was SSH.
 Anyway, the first command returned OK: 
@@ -121,8 +121,8 @@ then, we have to check if the SIM was recognized:
  ERROR</code></pre> 
  ERROR... ok, so the SIM was not recognized. I tried with another SIM but no luck... You should know that there is a SIM slot on the Topton device I have and, according to what people say online, it communicates with the modem directly through the M.2 slot.
 <p>
-So, I decided to open the case again and check if the SIM was properly inserted or there was a broken trace on motherboard but, nothing strange found. 
-Having lost all hope at this point, I decided to look online and, luckily, I found a <a href="https://forums.servethehome.com/index.php?threads/topton-jasper-lake-quad-i225v-mini-pc-report.36699/">forum post</a> talking about the same device so, I explained the problem there. Someone replied with the solution and it was very easy but not intuitive... Insert the SIM with the cut facing you (you are kidding me, Topton? :D).
+So, I decided to open the case again and check if the SIM was properly inserted or if there was a broken trace on the motherboard but found nothing strange. 
+Having lost all hope at this point, I decided to look online and, luckily, I found a <a href="https://forums.servethehome.com/index.php?threads/topton-jasper-lake-quad-i225v-mini-pc-report.36699/">forum post</a> talking about the same device, so I explained the problem there. Someone replied with the solution and it was very easy but not intuitive... Insert the SIM with the cut facing you (are you kidding me, Topton? :D).
 <br>
 >It worked, we now have the SIM recognized:
 <pre><code>AT+CPIN?
@@ -133,7 +133,7 @@ Now, we can check the signal quality:
  +CSQ: 99,99    
 </code></pre>
 Oh no, the first 99 means that there is no signal. Why? I mean, the module is without antennas but at least I expected like 2–3... 
-<br>My mind was going crazy. I was thinking that the module was dead or something like that, so I decided to ask on that forum if someone had the same problem and, luckily, someone answered that without antennas the signal is 99 because the device is a Faraday cage internally.
+<br>My mind was going crazy. I thought the module was dead or something like that, so I decided to ask on that forum if someone had the same problem and, luckily, someone answered that without antennas the signal is 99 because the device is a Faraday cage internally.
 Let's buy cables + antennas. 
 <figure style="margin:0;">
     <img src="img/days.jpg" 
@@ -156,13 +156,79 @@ Let's check the network registration:
 </code></pre>
 TIM is the operator of my SIM so everything is working fine.
 <p>
-Is time to setup the connection on OPNsense. The procedure is explained in the official documentation <a href="https://docs.opnsense.org/manual/how-tos/cellular.html">here</a>, so I will not repeat it, to spare you some time.
-<br>The problem is that, after the configuration, I was not able to establish a connection. This is because FreeBSD (the base of OPNsense) has problems with PPP. The bug ID is <a href="https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=281218">#281218</a>.
+It’s time to set up the connection on OPNsense. The procedure is explained in the official documentation <a href="https://docs.opnsense.org/manual/how-tos/cellular.html">here</a>, so I will not repeat it, to spare you some time.
+<br>The problem is that, after the configuration, I was not able to establish a connection. 
+<pre><code>2025-09-17T16:30:18
+ Notice
+ ppp
+ [wan_link0] LCP: Down event
+
+ 2025-09-17T16:30:18
+ Notice
+ ppp
+ [wan_link0] Link: DOWN event
+
+ 2025-09-17T16:30:18
+ Notice
+ ppp
+ [wan_link0] MODEM: chat script failed
+ 
+ 2025-09-17T16:30:18
+ Notice
+ ppp
+ [wan_link0] CHAT: The modem is not responding to "AT" at MomCmd: labeell.
+</code></pre>
+Checked on terminal if there was something that was using cuaU0.2 but no, there was nothing using it.
+<br>The error is coming from FreeBSD (the base of OPNsense) having problems with PPP. The bug ID is <a href="https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=281218">#281218</a>.
 Also, on opnsense-core GitHub there is an issue about this problem <a href="https://github.com/opnsense/src/issues/2142">#2142</a>, and someone was able to get a working connection by using this init string in the PPP configuration:
 <pre><code>&F&C1&D2E0S0=0${temp}
 </code></pre>
-With that string I was able to get a connection, but the bandwidth was very low, around 10 Mbps down and 6 Mbps up but is enough for me for the moment.
-<br>
-If you need higher speeds, consider using pfSense or a dedicated LTE router.
+With that string I was able to get a connection, but:
+<figure style="margin:0;">
+    <img src="img/gateway_show.jpg" 
+        alt="suffering" 
+        style="width:100%;max-width:1000px;margin:0;">
+</figure>
+RTT and RTTd are very high as you can see in the picture above.
+<br>At least, we have a working LTE connection on OPNsense and this is important.
+What we need now is to be notified when the main connection is down. This step is important because the SIM does not have an internet plan, I only have 1 GB per month, so I have to activate a daily plan when needed.
+<p>
+Monit on OPNsense just sends emails and I find this annoying. I prefer Discord notifications, so I found a way to do it using a script and a Discord webhook.
+<br> The idea is simple: create a cron job that calls a custom script which checks if the main connection is up or down, and if it is down, sends a notification to Discord using the webhook. What was not simple is that OPNsense does not allow custom commands inside cron:
+ <figure style="margin:0;">
+    <img src="img/cron_add.jpg" 
+        alt="suffering" 
+        style="width:100%;max-width:1000px;margin:0;">
+</figure>
+You have to create a custom script inside /usr/local/opnsense/scripts/. Create the folder, create the script inside, give the right permissions and then create a conf file inside /usr/local/opnsense/service/conf/action.d/, <a href="https://docs.opnsense.org/development/backend/configd.html">here the official doc</a>.
+<p style="background: #222; color: #fff; padding: 1em; border-radius: 6px; margin: 1.5em 0;">
+    <strong>Note:</strong> You have to add a description in the conf file, otherwise cron will not show your custom command.
+</p>
+ <figure style="margin:0;">
+    <figcaption style="margin-bottom:0.5em;">
+    Here is the conf file I created (maybe restart is not the right choice but it works):
+    </figcaption>
+    <img src="img/custom_actiond.jpg" 
+        alt="suffering" 
+        style="width:100%;max-width:1000px;margin:0;">
+</figure>
+<br>Restart configd service and then you will be able to see your custom command in the cron list:
+<figure style="margin:0;">
+    <img src="img/custom_cron.jpg" 
+        alt="suffering" 
+        style="width:100%;max-width:1000px;margin:0;">
+</figure>
+<br>I created the script using ChatGPT, modified it a bit and now it works fine. I think it is not necessary to share the code here, but if you are interested, hit me up on GitHub.
+Here is the result I have on Discord when the main connection is down:
+ <figure style="margin:0;">
+    <img src="img/ds_failover.jpg" 
+        alt="suffering" 
+        style="width:100%;max-width:300px;margin:0;">
+</figure>
+
+<h2>Conclusion</h2>
+<p>
+    Setting up LTE failover on OPNsense with the Quectel EC25-EUX modem was a challenging but rewarding experience. From hardware quirks to software limitations, each step required troubleshooting and patience. The key takeaways are to ensure proper hardware installation, use antennas for reliable signal, and be prepared for some FreeBSD/OPNsense PPP issues. With the right configuration and a bit of creativity for notifications, LTE failover can be a reliable backup for your network. If you have questions or need help, feel free to reach out on GitHub!
+</p>
 </body>
 </html>
